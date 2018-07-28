@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>  
+<body ng-app="myApp" ng-controller="myCtrl">
+
+<p>Try writing in the input field:</p>
+
+<form name="myForm">
+<input name="myInput" ng-model="myInput" tvvalidation tvrequiresAny="{{aNumber}},{{aNumber2}}">
+</form>
+<span ng-if="myForm.myInput.$valid == true">Valid</span>
+<span ng-if="myForm.myInput.$valid == false">Invalid</span>
+<br>
+<br>
+
+Nhập yêu cầu: <br>
+<input ng-model="aNumber">
+<input ng-model="aNumber2">
+
+<button ng-click="Check()">Show valid from controller</button>
+
+<script>
+    var app = angular.module('myApp', []);
+    app.directive('tvvalidation', function() {
+        return {
+            require: 'ngModel',
+            link: function(scope, element, attr, mCtrl) {
+                function myValidation(value) {
+                    var errorDoesNotExists = true;
+                    
+                    //Number validation
+                    if(attr.tvmustbeanumber != undefined){
+                        if(isNaN(value) == true && value != ''){
+                            errorDoesNotExists = false;
+                        }
+                        else{
+                            if(attr.tvequal != undefined){
+                                if(parseInt(value) != parseInt(attr.tvequal)){
+                                    errorDoesNotExists = false;
+                                }
+                            }
+
+                            if(attr.tvhigherthan != undefined){
+                                if(parseInt(value) <= parseInt(attr.tvhigherthan)){
+                                    errorDoesNotExists = false;
+                                }
+                            }
+
+                            if(attr.tvlowerthan != undefined){
+                                if(parseInt(value) >= parseInt(attr.tvlowerthan)){
+                                    errorDoesNotExists = false;
+                                }
+                            }
+
+                            if(attr.tvhigherorequal != undefined){
+                                if(parseInt(value) < parseInt(attr.tvhigherorequal)){
+                                    errorDoesNotExists = false;
+                                }
+                            }
+
+                            if(attr.tvlowerorequal != undefined){
+                                if(parseInt(value) > parseInt(attr.tvlowerorequal)){
+                                    errorDoesNotExists = false;
+                                }
+                            }
+                        }
+                    }
+                    //End number validation
+
+                    //Length validation.
+                    if(attr.tvlength != undefined){
+                        var minLengthandMaxLength = attr.tvlength.split(',');
+
+                        if(minLengthandMaxLength[0] && minLengthandMaxLength[0] >=0 ){
+                            if(value.length < minLengthandMaxLength[0]){
+                                errorDoesNotExists = false;
+                            }
+                        }
+
+                        if(minLengthandMaxLength[1] && minLengthandMaxLength[1] >=0 ){
+                            if(value.length > minLengthandMaxLength[1]){
+                                errorDoesNotExists = false;
+                            }
+                        }
+
+                    }
+                    //End length validation
+
+                    //Requires other field validation
+                    if(attr.tvrequiresall != undefined){
+                        var requiredModels = attr.tvrequiresall.split(',');
+                        
+                        for(var i = 0; i<requiredModels.length; i++){
+                            if(!requiredModels[i] || requiredModels[i] == '' ){
+                                errorDoesNotExists = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(attr.tvrequiresany != undefined){
+                        var requiredModels = attr.tvrequiresany.split(',');
+                        var flagAny = false;
+
+                        for(var i = 0; i<requiredModels.length; i++){
+                            if(requiredModels[i] && requiredModels[i] !=''){
+                                flagAny = true;
+                                break;
+                            }
+                        }
+
+                        if(flagAny == false){
+                            errorDoesNotExists = false;
+                        }
+                        
+                    }
+                    //End Requires other field validation
+
+                    //Must be true check
+                    if(attr.mustbetrue != undefined){
+                        if(value == false){
+                            errorDoesNotExists = false;
+                        }
+                    }
+                    //End must true check
+
+                    //Must be false check
+                    if(attr.mustbefalse != undefined){
+                        if(value == true){
+                            errorDoesNotExists = false;
+                        }
+                    }
+                    //End must false check
+
+                    //Required or optional validation
+                    if (attr.tvrequired != undefined){
+                        if(value == undefined || value == '' || value == null ){
+                            errorDoesNotExists = false;
+                        }
+                    }
+
+                    if (attr.tvoptional != undefined){
+                        if(value == undefined || value == '' || value == null ){
+                            errorDoesNotExists = true;
+                        }
+                    }
+                    //End required or optional validation
+
+                    mCtrl.$setValidity('charE', errorDoesNotExists);
+                    return value;
+                }
+
+                mCtrl.$formatters.push(myValidation);
+                mCtrl.$parsers.push(myValidation);
+
+                //Observation part. Fire validation on model changes.
+                attr.$observe('tvequal', function() {
+                    myValidation(element[0].value);
+                    mCtrl.$parsers.push(myValidation);
+                });
+
+                attr.$observe('tvhigherthan', function() {
+                    myValidation(element[0].value);
+                    mCtrl.$parsers.push(myValidation);
+                });
+
+                attr.$observe('tvlowerthan', function() {
+                    myValidation(element[0].value);
+                    mCtrl.$parsers.push(myValidation);
+                });
+
+                attr.$observe('tvhigherorequal', function() {
+                    myValidation(element[0].value);
+                    mCtrl.$parsers.push(myValidation);
+                });
+
+                attr.$observe('tvlowerorequal', function() {
+                    myValidation(element[0].value);
+                    mCtrl.$parsers.push(myValidation);
+                });
+
+                attr.$observe('tvlength', function() {
+                    myValidation(element[0].value);
+                    mCtrl.$parsers.push(myValidation);
+                });
+                
+                attr.$observe('tvrequiresall', function() {
+                    myValidation(element[0].value);
+                    mCtrl.$parsers.push(myValidation);
+                });
+
+                attr.$observe('tvrequiresany', function() {
+                    myValidation(element[0].value);
+                    mCtrl.$parsers.push(myValidation);
+                });
+                //End observation part.
+            }
+        };
+    });
+
+    app.controller('myCtrl', function($scope) {
+        $scope.myInput = "John";
+        $scope.aNumber = 5;
+        $scope.aNumber2 = 8;
+        $scope.Check = function(){
+            alert(this.myForm.$valid);
+        }
+    });
+</script>
+
+<p>The input field must contain the character "e" to be consider valid.</p>
+
+</body>
+</html>
