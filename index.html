@@ -3,74 +3,95 @@
     <head>
         <title>Read and write file</title>
         <meta charset="utf-8">
+
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-route.js"></script>
         
         <script src="Scripts/const.js"></script>
-        <script src="Scripts/AngularJS/MainApp.js"></script>
+        <script src="Scripts/AngularJS/Controllers/myAppController.js"></script>
     </head> 
 
-    <body ng-app="myApp" ng-controller="myCtrl">
+    <body ng-app="myApp">
+        <h3>Thuan's Website</h3>
+        <a href="#/!">Main</a><a href="#/!about">About</a>
         <div class="container-fluid">
-            <h1>Thuan test site</h1>
-            <p>Only HTML and Javascript here</p>
-
-            <div class="row" style="position: relative" ng-form="tableofPeople">
-                <div class="col-sm-3"></div>
-                <div class="col-sm-6">
-                    <table class="table table-bordered table-hover table-responsive">
-                        <thead class="bg-primary">
-                            <tr>
-                                <th class="text-center" style="width: 10%">Index</th>
-                                <th style="width: 55%">Name</th>
-                                <th class="text-center" style="width: 15%">Age</th>
-                                <th class="text-center" style="width: 10%">Edit</th>
-                                <th class="text-center" style="width: 10%">Delete</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-warning">
-                            <tr ng-repeat="x in names">
-                                <td class="text-center">{{ $index + 1 }}</td>
-                                <td ng-init="editMode=false; addingMode = (x.name == null && x.name == null ? true : false); ">
-                                    <span ng-if="!editMode && !addingMode">{{x.name}}</span>
-                                    <input ng-if="editMode || addingMode" ng-keypress="editMode=false" ng-init="editMode=true" ng-model="x.name" style="width: 100%" />
-                                </td>
-                                <td class="text-center">
-                                    <span ng-if="!editMode && !addingMode">{{x.age}}</span>
-                                    <input ng-if="editMode || addingMode" ng-model="x.age" style="width: 100%"/>
-                                </td>
-                                <td class="text-center">
-                                    <a ng-click="editMode = !editMode" href="#">
-                                        <span ng-if="!editMode && !addingMode">Edit</span>
-                                        <span ng-if="editMode && !addingMode">OK</span>
-                                    </a>
-                                    <a ng-click="addingMode = !addingMode; ToggleAddButton()" href="#">
-                                        <span ng-if="addingMode && !editMode">Add it</span>
-                                    </a>
-                                </td>
-                                <td class="text-center">
-                                    <a ng-click="DeleteAPerson($index)" href="#">
-                                        <span>X</span>
-                                    </a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="">
-                        <button ng-click="AddNewPerson(); ToggleAddButton()" ng-disabled="AddButtonEnable" type="button" class="btn btn-info">Add</button>
-                        <button ng-click="SaveToServer()" type="button" class="btn btn-info pull-right">Save down to database</button>
-                        <button ng-click="RevertChange()" type="button" class="btn btn-basic pull-right">Revert</button>
-                    </div>
-                </div>
-                <div class="col-sm-3"></div>
-                <div ng-init="isLoading=false" ng-if="isLoading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                    <img class="center-block" src="Images/Loading_icon.gif"/>
-                </div>
-            </div>
+            <div ng-view></div>
         </div>
     </body>
-</html>
 
-<script src="Scripts/AngularJS/Controllers/myAppController.js"></script>
+    <script>
+        var app = angular.module('myApp', ["ngRoute"]);
+        app.config(function($routeProvider) {
+            $routeProvider
+            .when("/", {
+                templateUrl : "Main.html",
+                controller: 'myCtrl', 
+            })
+            .when("/about", {
+                templateUrl : "About.html"
+            });
+        });
+        
+        app.controller('myCtrl', function($scope, $http) {
+            $scope.LoadTable = function (){
+                $scope.isLoading = true;
+                $http.get(apiRoute+"File/ReadTextFile?fileName="+fileName).then(function(response) {
+                    var temp = response.data;
+                    $scope.names = JSON.parse(temp);
+                    $scope.namesToRevert = JSON.parse(temp);
+                    $scope.isLoading = false;
+                });
+            }
+            
+            $scope.AddNewPerson = function (){
+                var aPerson = {
+                    name: null,
+                    age: null,
+                };
+                $scope.names.push(aPerson);
+            }
+
+            $scope.RevertChange = function (){
+                $scope.names = $scope.namesToRevert.map(x=> Object.assign({}, x) );
+            }
+
+            $scope.DeleteAPerson = function (index){
+                $scope.names.splice(index,1);
+            }
+
+            $scope.SaveToServer = function(){
+                if(!this.tableofPeople.$dirty && ($scope.names.length == $scope.namesToRevert.length)){
+                    alert("You have not changed anything");
+                    return;
+                }
+                $scope.isLoading = true;
+                var dataToPost = $scope.names.map(function(x){
+                    var aPerson = {
+                        name: x.name,
+                        age:  parseInt(x.age),
+                    }
+                    return aPerson;
+                })
+
+                $http.post(apiRoute+"File/OverwriteTextFile?fileName="+fileName, dataToPost).then(function(response) {
+                    $scope.LoadTable();
+                    $scope.isLoading = false;
+                });
+                
+                this.tableofPeople.$dirty = false;
+            }
+
+            $scope.ToggleAddButton = function (item){
+                $scope.AddButtonEnable = !$scope.AddButtonEnable;
+            }
+
+            $scope.AddButtonEnable = false;
+
+            $scope.LoadTable();
+        });
+        
+    </script>
+</html>
