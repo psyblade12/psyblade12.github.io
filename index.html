@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
     <head>
         <title>Read and write file</title>
@@ -10,88 +10,31 @@
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-route.js"></script>
         
+        <link rel="stylesheet" type="text/css" href="CSS/common.css">
         <script src="Scripts/const.js"></script>
+
+        <script src="Scripts/AngularJS/MainApp.js"></script>
         <script src="Scripts/AngularJS/Controllers/myAppController.js"></script>
+        
     </head> 
 
-    <body ng-app="myApp">
-        <h3>Thuan's Website</h3>
-        <a href="#/!">Main</a><a href="#/!about">About</a>
-        <div class="container-fluid">
-            <div ng-view></div>
+    <body ng-app="myApp" style="background-color:gray">
+        <div style="background-color:black" >
+            <span style="font-size: 2em" class="text-info">Thuan's website</span>
+            <ul class="qtmenu">
+                <li class="qtmenu"><a class="qtmenu" href="#/!">Home</a></li>
+                <li class="qtmenu"><a class="qtmenu" href="#!about">About</a></li>
+            </ul>
+        </div>
+
+        <div style="background-color: white; min-height: 35em">
+            <div ng-view class="container-fluid"></div>
+        </div>
+
+        <div class="footer">
+            <p>Thuan made this</p>
+            <p>Thanks for visiting</p>
         </div>
     </body>
-
-    <script>
-        var app = angular.module('myApp', ["ngRoute"]);
-        app.config(function($routeProvider) {
-            $routeProvider
-            .when("/", {
-                templateUrl : "Main.html",
-                controller: 'myCtrl', 
-            })
-            .when("/about", {
-                templateUrl : "About.html"
-            });
-        });
-        
-        app.controller('myCtrl', function($scope, $http) {
-            $scope.LoadTable = function (){
-                $scope.isLoading = true;
-                $http.get(apiRoute+"File/ReadTextFile?fileName="+fileName).then(function(response) {
-                    var temp = response.data;
-                    $scope.names = JSON.parse(temp);
-                    $scope.namesToRevert = JSON.parse(temp);
-                    $scope.isLoading = false;
-                });
-            }
-            
-            $scope.AddNewPerson = function (){
-                var aPerson = {
-                    name: null,
-                    age: null,
-                };
-                $scope.names.push(aPerson);
-            }
-
-            $scope.RevertChange = function (){
-                $scope.names = $scope.namesToRevert.map(x=> Object.assign({}, x) );
-            }
-
-            $scope.DeleteAPerson = function (index){
-                $scope.names.splice(index,1);
-            }
-
-            $scope.SaveToServer = function(){
-                if(!this.tableofPeople.$dirty && ($scope.names.length == $scope.namesToRevert.length)){
-                    alert("You have not changed anything");
-                    return;
-                }
-                $scope.isLoading = true;
-                var dataToPost = $scope.names.map(function(x){
-                    var aPerson = {
-                        name: x.name,
-                        age:  parseInt(x.age),
-                    }
-                    return aPerson;
-                })
-
-                $http.post(apiRoute+"File/OverwriteTextFile?fileName="+fileName, dataToPost).then(function(response) {
-                    $scope.LoadTable();
-                    $scope.isLoading = false;
-                });
-                
-                this.tableofPeople.$dirty = false;
-            }
-
-            $scope.ToggleAddButton = function (item){
-                $scope.AddButtonEnable = !$scope.AddButtonEnable;
-            }
-
-            $scope.AddButtonEnable = false;
-
-            $scope.LoadTable();
-        });
-        
-    </script>
+    
 </html>

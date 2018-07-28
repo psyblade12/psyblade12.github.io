@@ -1,6 +1,7 @@
 <div class="row" style="position: relative" ng-form="tableofPeople">
     <div class="col-sm-3"></div>
-    <div class="col-sm-6">
+    <div class="col-sm-6" style="background-color: white">
+        <h4 class="text-center">Some AngularJS view handling:</h4>
         <table class="table table-bordered table-hover table-responsive">
             <thead class="bg-primary">
                 <tr>
@@ -23,16 +24,16 @@
                         <input ng-if="editMode || addingMode" ng-model="x.age" style="width: 100%"/>
                     </td>
                     <td class="text-center">
-                        <a ng-click="editMode = !editMode" href="#">
+                        <a ng-click="editMode = !editMode" href="javascript:void(0)">
                             <span ng-if="!editMode && !addingMode">Edit</span>
                             <span ng-if="editMode && !addingMode">OK</span>
                         </a>
-                        <a ng-click="addingMode = !addingMode; ToggleAddButton()" href="#">
+                        <a ng-click="addingMode = !addingMode; ToggleAddButton()" href="javascript:void(0)">
                             <span ng-if="addingMode && !editMode">Add it</span>
                         </a>
                     </td>
                     <td class="text-center">
-                        <a ng-click="DeleteAPerson($index)" href="#">
+                        <a ng-click="DeleteAPerson($index)" href="javascript:void(0)">
                             <span>X</span>
                         </a>
                     </td>
