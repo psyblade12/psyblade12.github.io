@@ -1,214 +1,128 @@
 <!DOCTYPE html>
 <html>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>  
+<head>
+    <title>Read and write file</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script> 
+</head> 
+
 <body ng-app="myApp" ng-controller="myCtrl">
-
-<p>Try writing in the input field:</p>
-
-<form name="myForm">
-<input name="myInput" ng-model="myInput" tvvalidation tvrequiresAny="{{aNumber}},{{aNumber2}}">
-</form>
-<span ng-if="myForm.myInput.$valid == true">Valid</span>
-<span ng-if="myForm.myInput.$valid == false">Invalid</span>
-<br>
-<br>
-
-Nhập yêu cầu: <br>
-<input ng-model="aNumber">
-<input ng-model="aNumber2">
-
-<button ng-click="Check()">Show valid from controller</button>
+    <div class="container-fluid">
+        <div class="row" style="position: relative">
+            <div class="col-sm-3" style="background-color:lavender;"></div>
+            <div class="col-sm-6" style="background-color:lavenderblush;">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%">Index</th>
+                            <th style="width: 40%">Name</th>
+                            <th style="width: 20%">Age</th>
+                            <th style="width: 10%">Edit</th>
+                            <th style="width: 10%">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="x in names">
+                            <td>{{ $index + 1 }}</td>
+                            <td ng-init="editMode=false; addingMode = (x.name == null && x.name == null ? true : false); ">
+                                <span ng-if="!editMode && !addingMode">{{x.name}}</span>
+                                <input ng-if="editMode || addingMode" ng-model="x.name" style="width: 100%" />
+                            </td>
+                            <td>
+                                <span ng-if="!editMode && !addingMode">{{x.age}}</span>
+                                <input ng-if="editMode || addingMode" ng-model="x.age" style="width: 100%"/>
+                            </td>
+                            <td>
+                                <a ng-click="editMode = !editMode" href="#">
+                                    <span ng-if="!editMode && !addingMode">Edit</span>
+                                    <span ng-if="editMode && !addingMode">OK</span>
+                                </a>
+                                <a ng-click="addingMode = !addingMode; ToggleAddButton()" href="#">
+                                    <span ng-if="addingMode && !editMode">Add it</span>
+                                </a>
+                            </td>
+                            <td>
+                                <a ng-click="DeleteAPerson($index)" href="#">
+                                    <span>X</span>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="">
+                    <button ng-click="AddNewPerson(); ToggleAddButton()" ng-disabled="AddButtonEnable" type="button" class="btn btn-info">Add</button>
+                    <button ng-click="SaveToServer()" type="button" class="btn btn-info pull-right">Save down to database</button>
+                    <button ng-click="RevertChange()" type="button" class="btn btn-basic pull-right">Cancel</button>
+                    
+                </div>
+            </div>
+            
+            <div class="col-sm-3" style="background-color:lavender;"></div>
+            <div ng-init="isLoading=false" ng-if="isLoading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                <img class="center-block" src="Images/Loading_icon.gif"/>
+            </div>
+        </div>
+    </div>
+</body>
 
 <script>
+    const apiRoute = "https://thuanwebapp.azurewebsites.net/api/";
+    const fileName = "new.txt";
+
     var app = angular.module('myApp', []);
-    app.directive('tvvalidation', function() {
-        return {
-            require: 'ngModel',
-            link: function(scope, element, attr, mCtrl) {
-                function myValidation(value) {
-                    var errorDoesNotExists = true;
-                    
-                    //Number validation
-                    if(attr.tvmustbeanumber != undefined){
-                        if(isNaN(value) == true && value != ''){
-                            errorDoesNotExists = false;
-                        }
-                        else{
-                            if(attr.tvequal != undefined){
-                                if(parseInt(value) != parseInt(attr.tvequal)){
-                                    errorDoesNotExists = false;
-                                }
-                            }
-
-                            if(attr.tvhigherthan != undefined){
-                                if(parseInt(value) <= parseInt(attr.tvhigherthan)){
-                                    errorDoesNotExists = false;
-                                }
-                            }
-
-                            if(attr.tvlowerthan != undefined){
-                                if(parseInt(value) >= parseInt(attr.tvlowerthan)){
-                                    errorDoesNotExists = false;
-                                }
-                            }
-
-                            if(attr.tvhigherorequal != undefined){
-                                if(parseInt(value) < parseInt(attr.tvhigherorequal)){
-                                    errorDoesNotExists = false;
-                                }
-                            }
-
-                            if(attr.tvlowerorequal != undefined){
-                                if(parseInt(value) > parseInt(attr.tvlowerorequal)){
-                                    errorDoesNotExists = false;
-                                }
-                            }
-                        }
-                    }
-                    //End number validation
-
-                    //Length validation.
-                    if(attr.tvlength != undefined){
-                        var minLengthandMaxLength = attr.tvlength.split(',');
-
-                        if(minLengthandMaxLength[0] && minLengthandMaxLength[0] >=0 ){
-                            if(value.length < minLengthandMaxLength[0]){
-                                errorDoesNotExists = false;
-                            }
-                        }
-
-                        if(minLengthandMaxLength[1] && minLengthandMaxLength[1] >=0 ){
-                            if(value.length > minLengthandMaxLength[1]){
-                                errorDoesNotExists = false;
-                            }
-                        }
-
-                    }
-                    //End length validation
-
-                    //Requires other field validation
-                    if(attr.tvrequiresall != undefined){
-                        var requiredModels = attr.tvrequiresall.split(',');
-                        
-                        for(var i = 0; i<requiredModels.length; i++){
-                            if(!requiredModels[i] || requiredModels[i] == '' ){
-                                errorDoesNotExists = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    if(attr.tvrequiresany != undefined){
-                        var requiredModels = attr.tvrequiresany.split(',');
-                        var flagAny = false;
-
-                        for(var i = 0; i<requiredModels.length; i++){
-                            if(requiredModels[i] && requiredModels[i] !=''){
-                                flagAny = true;
-                                break;
-                            }
-                        }
-
-                        if(flagAny == false){
-                            errorDoesNotExists = false;
-                        }
-                        
-                    }
-                    //End Requires other field validation
-
-                    //Must be true check
-                    if(attr.mustbetrue != undefined){
-                        if(value == false){
-                            errorDoesNotExists = false;
-                        }
-                    }
-                    //End must true check
-
-                    //Must be false check
-                    if(attr.mustbefalse != undefined){
-                        if(value == true){
-                            errorDoesNotExists = false;
-                        }
-                    }
-                    //End must false check
-
-                    //Required or optional validation
-                    if (attr.tvrequired != undefined){
-                        if(value == undefined || value == '' || value == null ){
-                            errorDoesNotExists = false;
-                        }
-                    }
-
-                    if (attr.tvoptional != undefined){
-                        if(value == undefined || value == '' || value == null ){
-                            errorDoesNotExists = true;
-                        }
-                    }
-                    //End required or optional validation
-
-                    mCtrl.$setValidity('charE', errorDoesNotExists);
-                    return value;
-                }
-
-                mCtrl.$formatters.push(myValidation);
-                mCtrl.$parsers.push(myValidation);
-
-                //Observation part. Fire validation on model changes.
-                attr.$observe('tvequal', function() {
-                    myValidation(element[0].value);
-                    mCtrl.$parsers.push(myValidation);
-                });
-
-                attr.$observe('tvhigherthan', function() {
-                    myValidation(element[0].value);
-                    mCtrl.$parsers.push(myValidation);
-                });
-
-                attr.$observe('tvlowerthan', function() {
-                    myValidation(element[0].value);
-                    mCtrl.$parsers.push(myValidation);
-                });
-
-                attr.$observe('tvhigherorequal', function() {
-                    myValidation(element[0].value);
-                    mCtrl.$parsers.push(myValidation);
-                });
-
-                attr.$observe('tvlowerorequal', function() {
-                    myValidation(element[0].value);
-                    mCtrl.$parsers.push(myValidation);
-                });
-
-                attr.$observe('tvlength', function() {
-                    myValidation(element[0].value);
-                    mCtrl.$parsers.push(myValidation);
-                });
-                
-                attr.$observe('tvrequiresall', function() {
-                    myValidation(element[0].value);
-                    mCtrl.$parsers.push(myValidation);
-                });
-
-                attr.$observe('tvrequiresany', function() {
-                    myValidation(element[0].value);
-                    mCtrl.$parsers.push(myValidation);
-                });
-                //End observation part.
-            }
-        };
-    });
-
-    app.controller('myCtrl', function($scope) {
-        $scope.myInput = "John";
-        $scope.aNumber = 5;
-        $scope.aNumber2 = 8;
-        $scope.Check = function(){
-            alert(this.myForm.$valid);
+    app.controller('myCtrl', function($scope, $http) {
+        $scope.LoadTable = function (){
+            $scope.isLoading = true;
+            $http.get(apiRoute+"File/ReadTextFile?fileName="+fileName).then(function(response) {
+                var temp = response.data;
+                $scope.names = JSON.parse(temp);
+                $scope.namesToRevert = JSON.parse(temp);
+                $scope.isLoading = false;
+            });
         }
+        
+        $scope.AddNewPerson = function (){
+            var aPerson = {
+                name: null,
+                age: null,
+            };
+            $scope.names.push(aPerson);
+        }
+
+        $scope.RevertChange = function (){
+            $scope.names = $scope.namesToRevert.map(x=> Object.assign({}, x) );
+        }
+
+        $scope.DeleteAPerson = function (index){
+            $scope.names.splice(index,1);
+        }
+
+        $scope.SaveToServer = function(){
+            $scope.isLoading = true;
+            var dataToPost = $scope.names.map(function(x){
+                var aPerson = {
+                    name: x.name,
+                    age:  parseInt(x.age),
+                }
+                return aPerson;
+            })
+
+            $http.post(apiRoute+"File/OverwriteTextFile?fileName="+fileName, dataToPost).then(function(response) {
+                $scope.LoadTable();
+                $scope.isLoading = false;
+            });
+        }
+
+        $scope.ToggleAddButton = function (item){
+            $scope.AddButtonEnable = !$scope.AddButtonEnable;
+        }
+
+        $scope.AddButtonEnable = false;
+
+        $scope.LoadTable();
     });
 </script>
-
-<p>The input field must contain the character "e" to be consider valid.</p>
-
-</body>
 </html>
