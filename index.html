@@ -35,7 +35,7 @@
                                 <td class="text-center">{{ $index + 1 }}</td>
                                 <td ng-init="editMode=false; addingMode = (x.name == null && x.name == null ? true : false); ">
                                     <span ng-if="!editMode && !addingMode">{{x.name}}</span>
-                                    <input ng-if="editMode || addingMode" ng-model="x.name" style="width: 100%" />
+                                    <input ng-if="editMode || addingMode" ng-keypress="editMode=false" ng-init="editMode=true" ng-model="x.name" style="width: 100%" />
                                 </td>
                                 <td class="text-center">
                                     <span ng-if="!editMode && !addingMode">{{x.age}}</span>

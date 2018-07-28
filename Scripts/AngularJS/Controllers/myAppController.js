@@ -27,7 +27,7 @@ var app = angular.module('myApp', []);
         }
 
         $scope.SaveToServer = function(){
-            if(!this.tableofPeople.$dirty){
+            if(!this.tableofPeople.$dirty && ($scope.names.length == $scope.namesToRevert.length)){
                 alert("You have not changed anything");
                 return;
             }
@@ -44,6 +44,8 @@ var app = angular.module('myApp', []);
                 $scope.LoadTable();
                 $scope.isLoading = false;
             });
+            
+            this.tableofPeople.$dirty = false;
         }
 
         $scope.ToggleAddButton = function (item){
