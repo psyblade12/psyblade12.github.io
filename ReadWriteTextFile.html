@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Read and write file</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script> 
+</head> 
+
+<body ng-app="myApp" ng-controller="myCtrl">
+    <div class="container-fluid">
+        <div class="row" style="position: relative">
+            <div class="col-sm-3" style="background-color:lavender;"></div>
+            <div class="col-sm-6" style="background-color:lavenderblush;">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%">Index</th>
+                            <th style="width: 40%">Name</th>
+                            <th style="width: 20%">Age</th>
+                            <th style="width: 10%">Edit</th>
+                            <th style="width: 10%">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="x in names">
+                            <td>{{ $index + 1 }}</td>
+                            <td ng-init="editMode=false; addingMode = (x.name == null && x.name == null ? true : false); ">
+                                <span ng-if="!editMode && !addingMode">{{x.name}}</span>
+                                <input ng-if="editMode || addingMode" ng-model="x.name" style="width: 100%" />
+                            </td>
+                            <td>
+                                <span ng-if="!editMode && !addingMode">{{x.age}}</span>
+                                <input ng-if="editMode || addingMode" ng-model="x.age" style="width: 100%"/>
+                            </td>
+                            <td>
+                                <a ng-click="editMode = !editMode" href="#">
+                                    <span ng-if="!editMode && !addingMode">Edit</span>
+                                    <span ng-if="editMode && !addingMode">OK</span>
+                                </a>
+                                <a ng-click="addingMode = !addingMode; ToggleAddButton()" href="#">
+                                    <span ng-if="addingMode && !editMode">Add it</span>
+                                </a>
+                            </td>
+                            <td>
+                                <a ng-click="DeleteAPerson($index)" href="#">
+                                    <span>X</span>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="">
+                    <button ng-click="AddNewPerson(); ToggleAddButton()" ng-disabled="AddButtonEnable" type="button" class="btn btn-info">Add</button>
+                    <button ng-click="SaveToServer()" type="button" class="btn btn-info pull-right">Save down to database</button>
+                    <button ng-click="RevertChange()" type="button" class="btn btn-basic pull-right">Cancel</button>
+                    
+                </div>
+            </div>
+            
+            <div class="col-sm-3" style="background-color:lavender;"></div>
+            <div ng-init="isLoading=false" ng-if="isLoading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                <img class="center-block" src="Loading_icon.gif"/>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    const apiRoute = "https://thuanwebapp.azurewebsites.net/api/";
+    const fileName = "new.txt";
+
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function($scope, $http) {
+        $scope.LoadTable = function (){
+            $scope.isLoading = true;
+            $http.get(apiRoute+"File/ReadTextFile?fileName="+fileName).then(function(response) {
+                var temp = response.data;
+                $scope.names = JSON.parse(temp);
+                $scope.namesToRevert = JSON.parse(temp);
+                $scope.isLoading = false;
+            });
+        }
+        
+        $scope.AddNewPerson = function (){
+            var aPerson = {
+                name: null,
+                age: null,
+            };
+            $scope.names.push(aPerson);
+        }
+
+        $scope.RevertChange = function (){
+            $scope.names = $scope.namesToRevert.map(x=> Object.assign({}, x) );
+        }
+
+        $scope.DeleteAPerson = function (index){
+            $scope.names.splice(index,1);
+        }
+
+        $scope.SaveToServer = function(){
+            $scope.isLoading = true;
+            var dataToPost = $scope.names.map(function(x){
+                var aPerson = {
+                    name: x.name,
+                    age:  parseInt(x.age),
+                }
+                return aPerson;
+            })
+
+            $http.post(apiRoute+"File/OverwriteTextFile?fileName="+fileName, dataToPost).then(function(response) {
+                $scope.LoadTable();
+                $scope.isLoading = false;
+            });
+        }
+
+        $scope.ToggleAddButton = function (item){
+            $scope.AddButtonEnable = !$scope.AddButtonEnable;
+        }
+
+        $scope.AddButtonEnable = false;
+
+        $scope.LoadTable();
+    });
+</script>
+</html>
