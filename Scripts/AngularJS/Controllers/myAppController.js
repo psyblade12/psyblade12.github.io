@@ -27,6 +27,10 @@ var app = angular.module('myApp', []);
         }
 
         $scope.SaveToServer = function(){
+            if(!this.tableofPeople.$dirty){
+                alert("You have not changed anything");
+                return;
+            }
             $scope.isLoading = true;
             var dataToPost = $scope.names.map(function(x){
                 var aPerson = {

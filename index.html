@@ -17,31 +17,31 @@
             <h1>Thuan test site</h1>
             <p>Only HTML and Javascript here</p>
 
-            <div class="row" style="position: relative">
+            <div class="row" style="position: relative" ng-form="tableofPeople">
                 <div class="col-sm-3"></div>
                 <div class="col-sm-6">
-                    <table class="table table-bordered table-hover table-responsive bg-warning">
-                        <thead>
+                    <table class="table table-bordered table-hover table-responsive">
+                        <thead class="bg-primary">
                             <tr>
-                                <th style="width: 20%">Index</th>
-                                <th style="width: 40%">Name</th>
-                                <th style="width: 20%">Age</th>
-                                <th style="width: 10%">Edit</th>
-                                <th style="width: 10%">Delete</th>
+                                <th class="text-center" style="width: 10%">Index</th>
+                                <th style="width: 55%">Name</th>
+                                <th class="text-center" style="width: 15%">Age</th>
+                                <th class="text-center" style="width: 10%">Edit</th>
+                                <th class="text-center" style="width: 10%">Delete</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="bg-warning">
                             <tr ng-repeat="x in names">
-                                <td>{{ $index + 1 }}</td>
+                                <td class="text-center">{{ $index + 1 }}</td>
                                 <td ng-init="editMode=false; addingMode = (x.name == null && x.name == null ? true : false); ">
                                     <span ng-if="!editMode && !addingMode">{{x.name}}</span>
                                     <input ng-if="editMode || addingMode" ng-model="x.name" style="width: 100%" />
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span ng-if="!editMode && !addingMode">{{x.age}}</span>
                                     <input ng-if="editMode || addingMode" ng-model="x.age" style="width: 100%"/>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <a ng-click="editMode = !editMode" href="#">
                                         <span ng-if="!editMode && !addingMode">Edit</span>
                                         <span ng-if="editMode && !addingMode">OK</span>
@@ -50,7 +50,7 @@
                                         <span ng-if="addingMode && !editMode">Add it</span>
                                     </a>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <a ng-click="DeleteAPerson($index)" href="#">
                                         <span>X</span>
                                     </a>
@@ -61,7 +61,7 @@
                     <div class="">
                         <button ng-click="AddNewPerson(); ToggleAddButton()" ng-disabled="AddButtonEnable" type="button" class="btn btn-info">Add</button>
                         <button ng-click="SaveToServer()" type="button" class="btn btn-info pull-right">Save down to database</button>
-                        <button ng-click="RevertChange()" type="button" class="btn btn-basic pull-right">Cancel</button>
+                        <button ng-click="RevertChange()" type="button" class="btn btn-basic pull-right">Revert</button>
                     </div>
                 </div>
                 <div class="col-sm-3"></div>
